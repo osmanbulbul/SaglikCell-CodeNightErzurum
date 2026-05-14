@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     
+    # JWT Auth
+    SECRET_KEY: str = "super-secret-key-for-codenight" # Dev key
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+    
     class Config:
         case_sensitive = True
 

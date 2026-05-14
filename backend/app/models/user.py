@@ -12,7 +12,8 @@ class UserRole(str, enum.Enum):
 
 class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String, unique=True, index=True, nullable=False)
+    phone_number = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=True) # made nullable
     password_hash = Column(String, nullable=False)
     full_name = Column(String)
     height = Column(Float)  # cm
