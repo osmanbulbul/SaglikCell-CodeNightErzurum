@@ -6,7 +6,7 @@ services:
     container_name: saglikcell_db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: admin
       POSTGRES_DB: saglikcell_db
     ports:
       - "5432:5432"
