@@ -2,13 +2,14 @@ from fastapi import APIRouter
 
 api_router = APIRouter()
 
-from app.api.v1.endpoints import auth, users, payments, metrics, goals
+from app.api.v1.endpoints import auth, users, payments, metrics, goals, analytics
 
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(payments.router, prefix="/payment", tags=["payment"])
 api_router.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
 api_router.include_router(goals.router, prefix="/goals", tags=["goals"])
+api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 
 @api_router.get("/health", tags=["health"])
 async def health_check():
