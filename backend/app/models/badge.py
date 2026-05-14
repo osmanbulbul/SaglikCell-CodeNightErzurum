@@ -5,10 +5,11 @@ from sqlalchemy.sql import func
 from app.db.base_class import Base
 
 class Badge(Base):
+    __tablename__ = "badges"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, unique=True, nullable=False)
     description = Column(String)
-    criteria = Column(String)  # JSON or simple code string like '10K_STEPS'
+    criteria = Column(String)  # '10K_STEPS', '30_DAY_STREAK' gibi kriter kodu
     icon = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
