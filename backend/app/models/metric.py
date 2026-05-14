@@ -9,7 +9,7 @@ class Metric(Base):
     # id string will be generated natively or by timescale if needed, but uuid is fine
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
-    metric_type = Column(String, nullable=False) # 'steps', 'water', 'sleep'
+    metric_type = Column(String, nullable=False) # 'steps', 'water', 'sleep', 'weight', 'heart_rate', 'calories'
     value = Column(Float, nullable=False)
     timestamp = Column(DateTime(timezone=True), primary_key=True, default=func.now(), nullable=False)
 
@@ -25,6 +25,9 @@ class DailySummary(Base):
     total_steps = Column(Float, default=0)
     total_water = Column(Float, default=0)
     sleep_hours = Column(Float, default=0)
+    total_calories = Column(Float, default=0)
+    weight = Column(Float, nullable=True) # Son girilen kilo değeri alınır
+    avg_heart_rate = Column(Float, nullable=True) # Günlük ortalama nabız
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (

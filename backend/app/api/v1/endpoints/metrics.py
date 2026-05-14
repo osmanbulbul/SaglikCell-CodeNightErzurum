@@ -1,5 +1,6 @@
 import asyncio
-from datetime import datetime, timezone
+import random
+from datetime import datetime, timezone, timedelta
 from typing import Any, List, Dict
 from uuid import UUID
 
@@ -97,7 +98,8 @@ async def create_metric(
             date=today,
             total_steps=0,
             total_water=0,
-            sleep_hours=0
+            sleep_hours=0,
+            total_calories=0
         )
         db.add(summary)
 
@@ -107,6 +109,15 @@ async def create_metric(
         summary.total_water += metric_in.value
     elif metric_in.metric_type == "sleep":
         summary.sleep_hours += metric_in.value
+    elif metric_in.metric_type == "calories":
+        summary.total_calories += metric_in.value
+    elif metric_in.metric_type == "weight":
+        summary.weight = metric_in.value
+    elif metric_in.metric_type == "heart_rate":
+        if summary.avg_heart_rate:
+            summary.avg_heart_rate = (summary.avg_heart_rate + metric_in.value) / 2.0
+        else:
+            summary.avg_heart_rate = metric_in.value
 
     await db.commit()
     await db.refresh(new_metric)
@@ -162,10 +173,90 @@ async def delete_metric(
             summary.total_water = max(0, summary.total_water - metric.value)
         elif metric.metric_type == "sleep":
             summary.sleep_hours = max(0, summary.sleep_hours - metric.value)
+        elif metric.metric_type == "calories":
+            summary.total_calories = max(0, summary.total_calories - metric.value)
             
     await db.delete(metric)
     await db.commit()
     return {"message": "Metrik başarıyla silindi ve günlük özet güncellendi."}
+
+
+@router.put("/{metric_id}", response_model=MetricResponse)
+async def update_metric(
+    metric_id: UUID,
+    metric_in: MetricCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Geçmiş bir metrik kaydını düzeltir ve günlük özeti günceller. (Task 3.3)
+    """
+    result = await db.execute(
+        select(Metric).where(Metric.id == metric_id, Metric.user_id == current_user.id)
+    )
+    metric = result.scalars().first()
+    
+    if not metric:
+        raise HTTPException(status_code=404, detail="Metrik bulunamadı.")
+        
+    today = metric.timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
+    summary_result = await db.execute(
+        select(DailySummary).where(DailySummary.user_id == current_user.id, DailySummary.date == today)
+    )
+    summary = summary_result.scalars().first()
+    
+    if summary:
+        if metric.metric_type == "steps":
+            summary.total_steps = max(0, summary.total_steps - metric.value + metric_in.value)
+        elif metric.metric_type == "water":
+            summary.total_water = max(0, summary.total_water - metric.value + metric_in.value)
+        elif metric.metric_type == "sleep":
+            summary.sleep_hours = max(0, summary.sleep_hours - metric.value + metric_in.value)
+        elif metric.metric_type == "calories":
+            summary.total_calories = max(0, summary.total_calories - metric.value + metric_in.value)
+        elif metric.metric_type == "weight" and summary.weight == metric.value:
+            summary.weight = metric_in.value
+
+    metric.value = metric_in.value
+    await db.commit()
+    await db.refresh(metric)
+    return metric
+
+
+@router.post("/simulate/bulk")
+async def generate_bulk_simulation_data(
+    days: int = 7,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Dashboard ve grafik testleri için geriye dönük rastgele simülasyon verisi üretir. (Task 3.4)
+    """
+    now = datetime.now(timezone.utc)
+    for i in range(days):
+        target_date = now - timedelta(days=i)
+        today = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        result = await db.execute(
+            select(DailySummary).where(DailySummary.user_id == current_user.id, DailySummary.date == today)
+        )
+        summary = result.scalars().first()
+        
+        if not summary:
+            summary = DailySummary(
+                user_id=current_user.id,
+                date=today,
+                total_steps=random.uniform(3000, 15000),
+                total_water=random.uniform(1000, 3000),
+                sleep_hours=random.uniform(5, 9),
+                total_calories=random.uniform(1500, 3000),
+                weight=random.uniform(70, 75),
+                avg_heart_rate=random.uniform(60, 100)
+            )
+            db.add(summary)
+            
+    await db.commit()
+    return {"message": f"Son {days} gün için rastgele simülasyon verileri üretildi."}
 
 
 @router.post("/simulate/steps/start")

@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import datetime
 
 class MetricCreate(BaseModel):
-    metric_type: str = Field(..., description="'steps', 'water', 'sleep'")
+    metric_type: str = Field(..., description="'steps', 'water', 'sleep', 'weight', 'heart_rate', 'calories'")
     value: float = Field(..., gt=0, description="Value of the metric")
     timestamp: Optional[datetime] = None
 
@@ -25,6 +25,9 @@ class DailySummaryResponse(BaseModel):
     total_steps: float
     total_water: float
     sleep_hours: float
+    total_calories: float
+    weight: Optional[float] = None
+    avg_heart_rate: Optional[float] = None
     updated_at: datetime
 
     class Config:
