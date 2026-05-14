@@ -7,7 +7,6 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
-alembic/versions/*.py
-!alembic/versions/__init__.py
+
 .idea/
 .vscode/
